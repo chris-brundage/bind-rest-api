@@ -66,6 +66,11 @@ Vagrant.configure("2") do |config|
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
+    if [[ $(mysql -BNe "show databases like 'named'") == "" ]]
+    then
+        mysqladmin create named
+    fi
+
     if [[ ! -d /home/vagrant/virtualenvs ]]
     then
         mkdir /home/vagrant/virtualenvs
@@ -77,7 +82,12 @@ Vagrant.configure("2") do |config|
     fi
 
     source /home/vagrant/virtualenvs/bind-api/bin/activate
+    export DJANGO_SETTINGS_MODULE="bind_rest_api.settings.local"
     su vagrant -c 'pip3 install -r /vagrant/requirements.txt'
+    cd /vagrant
+    su vagrant -c 'python3 manage.py makemigrations'
+    su vagrant -c 'python3 manage.py migrate'
     deactivate
+
   SHELL
 end
