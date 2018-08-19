@@ -1,0 +1,6 @@
+Django
+django-rest-framework
+djangorestframework
+mysqlclient
+python-dateutil
+pytz

@@ -75,5 +75,9 @@ Vagrant.configure("2") do |config|
     then
         su vagrant -c 'python3.6 -m venv /home/vagrant/virtualenvs/bind-api'
     fi
+
+    source /home/vagrant/virtualenvs/bind-api/bin/activate
+    su vagrant -c 'pip3 install -r /vagrant/requirements.txt'
+    deactivate
   SHELL
 end
