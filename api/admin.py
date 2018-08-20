@@ -1,3 +1,7 @@
 from django.contrib import admin
+from api.models import NameServer, Record, Zone
 
-# Register your models here.
+admin.site.register(NameServer)
+admin.site.register(Record)
+admin.site.register(Zone)
+
