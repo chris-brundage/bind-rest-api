@@ -11,6 +11,14 @@ class Zone(models.Model):
     filename = models.CharField(max_length=255)
     admin_email = models.EmailField(max_length=255)
     default_ttl = models.IntegerField(default=3600)
+    serial_version = models.IntegerField(default=0, blank=True, null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    active = models.BooleanField(default=True, blank=True, null=False)
+
+    @property
+    def serial(self):
+        return '{:%Y%m%d}{:#02}'.format(self.updated_at, self.serial_version)
 
     @property
     def zone_admin(self):
@@ -26,7 +34,7 @@ class Host(models.Model):
 
     @property
     def host_rel(self):
-        if self.hostname == '':
+        if self.hostname == '' or self.hostname == self.zone.domain:
             return '@'
 
         re_match = r'\.' + re.escape(self.zone.domain) + '\.?'
@@ -57,6 +65,9 @@ class Record(Host):
                                null=True)
     txt_data = models.TextField(default=None, blank=True, null=True)
     ttl = models.IntegerField(default=3600)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    active = models.BooleanField(default=True, blank=True, null=False)
 
     @property
     def data(self):
