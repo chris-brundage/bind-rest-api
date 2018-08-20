@@ -87,6 +87,7 @@ Vagrant.configure("2") do |config|
     cd /vagrant
     su vagrant -c 'python3 manage.py makemigrations'
     su vagrant -c 'python3 manage.py migrate'
+    su vagrant -c 'python3 manage.py loaddata --app api api_data'
     deactivate
 
   SHELL

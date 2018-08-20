@@ -4,3 +4,4 @@ djangorestframework
 mysqlclient
 python-dateutil
 pytz
+PyYAML
