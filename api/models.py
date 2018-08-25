@@ -1,8 +1,4 @@
 from django.db import models
-from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from rest_framework.authtoken.models import Token
 import re
 
 
@@ -14,7 +10,26 @@ class Zone(models.Model):
     serial_version = models.IntegerField(default=0, blank=True, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    active = models.BooleanField(default=True, blank=True, null=False)
+    refresh_ttl = models.IntegerField(default=28800)
+    retry_ttl = models.IntegerField(default=1800)
+    expire_ttl = models.IntegerField(default=604800)
+    min_ttl = models.IntegerField(default=86400)
+    active = models.BooleanField(default=False, blank=True, null=False)
+
+    @property
+    def authoritative_ns(self):
+        try:
+            for ns in self.nameservers:
+                if ns.is_authoritative:
+                    return ns.host_fqdn
+        except AttributeError:
+            pass
+
+        return '.'
+
+    @property
+    def fqdn(self):
+        return self.domain + '.'
 
     @property
     def serial(self):
@@ -22,7 +37,10 @@ class Zone(models.Model):
 
     @property
     def zone_admin(self):
-        return self.admin_email.replace('@', '.')
+        zone_admin = self.admin_email.replace('@', '.')
+        if not zone_admin.endswith('.'):
+            zone_admin += '.'
+        return zone_admin
 
     def __str__(self):
         return self.domain
@@ -31,6 +49,9 @@ class Zone(models.Model):
 class Host(models.Model):
     hostname = models.CharField(max_length=255, blank=True)
     zone = models.ForeignKey(Zone, on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
 
     @property
     def host_rel(self):
@@ -50,9 +71,6 @@ class Host(models.Model):
         if self.hostname.endswith(self.zone.domain):
             return self.hostname + '.'
         return '{}.{}.'.format(self.hostname, self.zone.domain)
-
-    class Meta:
-        abstract = True
 
 
 class Record(Host):
@@ -100,9 +118,3 @@ class NameServer(Host):
 
     class Meta:
         verbose_name_plural = 'Name Servers'
-
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
