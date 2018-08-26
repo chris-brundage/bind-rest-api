@@ -18,7 +18,7 @@ class ZoneSerializer(serializers.ModelSerializer):
 class RecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Record
-        fields = ('id', 'hostname', 'record_type', 'target', 'ip', 'data',
+        fields = ('id', 'host', 'record_type', 'target', 'ip', 'data',
                   'mx_priority', 'mx_host', 'txt_data', 'ttl', 'created_at',
                   'updated_at', 'zone')
         read_only_fields = ('data', 'created_at', 'updated_at')
@@ -27,4 +27,4 @@ class RecordSerializer(serializers.ModelSerializer):
 class NameServerSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.NameServer
-        fields = ('id', 'hostname', 'ip', 'is_authoritative', 'zone')
+        fields = ('id', 'host', 'ip', 'is_authoritative', 'zone')

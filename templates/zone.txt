@@ -1,21 +1,17 @@
+{% autoescape off %}
 $ORIGIN {{ z.domain }}.
 $TTL {{ z.default_ttl }}	; 4 hours
 @    IN SOA	{{ z.authoritative_ns }} {{ z.zone_admin }} (
-        {{ z.serial }}    ; serial
-        {{ z.refresh_ttl }}   ; refresh (8 hours)
-        {{ z.retry_ttl }}     ; retry (30 minutes)
-        {{ z.expire_ttl }}    ; expire (1 week)
-        {{ z.min_ttl }}   ; minimum (1 day)
+        {{ z.serial }}  ; serial
+        {{ z.refresh_ttl }} ; refresh (8 hours)
+        {{ z.retry_ttl }}   ; retry (30 minutes)
+        {{ z.expire_ttl }}  ; expire (1 week)
+        {{ z.min_ttl }} ; minimum (1 day)
     )
-{% if z.nameservers %}
-{% for ns in z.nameservers %}
-NS	{{ ns.host }}
+{% for ns in z.nameserver_set.all %}
+@   IN  {{ z.default_ttl }}     NS      {{ ns.host }}
 {% endfor %}
-
-{% endif %}
-{% if z.records %}
-{% for record in z.records %}
-{{ record.host }} IN  {{ record.ttl }}    {{ record.record_type }}    {{ record.data }}
+{% for record in z.record_set.all %}
+{{ record.host }}   IN  {{ record.ttl }}      {{ record.record_type|upper }}    {{ record.data }}
 {% endfor %}
-
-{% endif %}
+{% endautoescape %}

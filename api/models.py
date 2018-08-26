@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 import re
 
 
@@ -7,7 +8,9 @@ class Zone(models.Model):
     filename = models.CharField(max_length=255)
     admin_email = models.EmailField(max_length=255)
     default_ttl = models.IntegerField(default=3600)
-    serial_version = models.IntegerField(default=0, blank=True, null=False)
+    serial_version = models.IntegerField(default=0, blank=True, null=False,
+                                         validators=[MinValueValidator(0),
+                                                     MaxValueValidator(99)])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     refresh_ttl = models.IntegerField(default=28800)
@@ -18,12 +21,9 @@ class Zone(models.Model):
 
     @property
     def authoritative_ns(self):
-        try:
-            for ns in self.nameservers:
-                if ns.is_authoritative:
-                    return ns.host_fqdn
-        except AttributeError:
-            pass
+        for ns in self.nameserver_set.all():
+            if ns.is_authoritative:
+                return ns.host_fqdn
 
         return '.'
 
@@ -47,7 +47,7 @@ class Zone(models.Model):
 
 
 class Host(models.Model):
-    hostname = models.CharField(max_length=255, blank=True)
+    host = models.CharField(max_length=255)
     zone = models.ForeignKey(Zone, on_delete=models.CASCADE)
 
     class Meta:
@@ -55,22 +55,22 @@ class Host(models.Model):
 
     @property
     def host_rel(self):
-        if self.hostname == '' or self.hostname == self.zone.domain:
+        if self.host == '' or self.host == self.zone.domain:
             return '@'
 
         re_match = r'\.' + re.escape(self.zone.domain) + '\.?'
-        if not re.match(re_match, self.hostname, re.IGNORECASE):
-            return self.hostname
+        if not re.match(re_match, self.host, re.IGNORECASE):
+            return self.host
         else:
-            return re.sub(re_match, '', self.hostname, re.IGNORECASE)
+            return re.sub(re_match, '', self.host, re.IGNORECASE)
 
     @property
     def host_fqdn(self):
-        if self.hostname.endswith('.'):
-            return self.hostname
-        if self.hostname.endswith(self.zone.domain):
-            return self.hostname + '.'
-        return '{}.{}.'.format(self.hostname, self.zone.domain)
+        if self.host.endswith('.'):
+            return self.host
+        if self.host.endswith(self.zone.domain):
+            return self.host + '.'
+        return '{}.{}.'.format(self.host, self.zone.domain)
 
 
 class Record(Host):
@@ -89,13 +89,13 @@ class Record(Host):
 
     @property
     def data(self):
-        if self.record_type == 'mx':
+        if self.record_type.upper() == 'MX':
             data = '{} {}'.format(self.mx_priority, self.mx_host)
-        elif self.record_type in ('a', 'aaaa'):
+        elif self.record_type.upper() in ('A', 'AAAA'):
             data = '{}'.format(self.ip)
-        elif self.record_type == 'cname':
+        elif self.record_type.upper() == 'CNAME':
             data = '{}'.format(self.target)
-        elif self.record_type == 'txt':
+        elif self.record_type.upper() == 'TXT':
             data = '"{}"'.format(self.txt_data.strip('"'))
         else:
             raise NotImplementedError()
