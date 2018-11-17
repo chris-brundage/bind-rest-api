@@ -1,12 +1,13 @@
 {% autoescape off %}
+{% load api_template_filters %}
 $ORIGIN {{ z.domain }}.
-$TTL {{ z.default_ttl }}	; 4 hours
+$TTL {{ z.default_ttl }}	; {{ z.default_ttl|humantime }}
 @    IN SOA	{{ z.authoritative_ns }} {{ z.zone_admin }} (
         {{ z.serial }}  ; serial
-        {{ z.refresh_ttl }} ; refresh (8 hours)
-        {{ z.retry_ttl }}   ; retry (30 minutes)
-        {{ z.expire_ttl }}  ; expire (1 week)
-        {{ z.min_ttl }} ; minimum (1 day)
+        {{ z.refresh_ttl }} ; refresh ({{ z.refresh_ttl|humantime }})
+        {{ z.retry_ttl }}   ; retry ({{ z.retry_ttl|humantime }})
+        {{ z.expire_ttl }}  ; expire ({{ z.expire_ttl|humantime }})
+        {{ z.min_ttl }} ; minimum ({{ z.min_ttl|humantime }})
     )
 {% for ns in z.nameserver_set.all %}
 @   IN  {{ z.default_ttl }}     NS      {{ ns.host }}

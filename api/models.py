@@ -25,7 +25,7 @@ class Zone(models.Model):
             if ns.is_authoritative:
                 return ns.host_fqdn
 
-        return '.'
+        return None
 
     @property
     def fqdn(self):

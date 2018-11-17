@@ -5,14 +5,13 @@ from api import models
 class ZoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Zone
-        fields = ('id', 'domain', 'serial', 'filename', 'admin_email', 'default_ttl',
-                  'zone_admin', 'serial_version', 'created_at', 'updated_at',
+        fields = ('id', 'domain', 'authoritative_ns', 'serial', 'filename', 'admin_email', 'default_ttl',
+                  'zone_admin', 'serial_version', 'created_at', 'updated_at', 'record_set',
                   'active')
-        read_only_fields = ('created_at', 'updated_at', 'zone_admin', 'serial')
-        depth = 2
-
-    # def get_soa(self, obj):
-    #     name_servers = obj.obje
+        read_only_fields = (
+            'created_at', 'updated_at', 'zone_admin', 'serial_version',
+            'serial')
+        depth = 1
 
 
 class RecordSerializer(serializers.ModelSerializer):
